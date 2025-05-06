@@ -14,16 +14,19 @@ namespace NukeBinObjExtension
     internal class NukeCommand : Command
     {
         private readonly TraceSource logger;
+        private readonly NukeService _nukeService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NukeCommand"/> class.
         /// </summary>
         /// <param name="traceSource">Trace source instance to utilize.</param>
-        public NukeCommand(TraceSource traceSource)
+        public NukeCommand(TraceSource traceSource, NukeService nukeService)
         {
             // This optional TraceSource can be used for logging in the command. You can use dependency injection to access
             // other services here as well.
             this.logger = Requires.NotNull(traceSource, nameof(traceSource));
+
+            this._nukeService = nukeService;
         }
 
         /// <inheritdoc />
@@ -37,6 +40,7 @@ namespace NukeBinObjExtension
                 // Project context menu
                 CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 518, priority: 0),
             ],
+            
         };
 
         /// <inheritdoc />
@@ -49,40 +53,20 @@ namespace NukeBinObjExtension
         /// <inheritdoc />
         public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken)
         {
-#pragma warning disable VSEXTPREVIEW_PROJECTQUERY_PROPERTIES_BUILDPROPERTIES // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             var project = await context.GetActiveProjectAsync(project => project.With(p => new { p.Name, p.Path })
                             .With(p => p.ActiveConfigurations),
                             cancellationToken);
-#pragma warning restore VSEXTPREVIEW_PROJECTQUERY_PROPERTIES_BUILDPROPERTIES // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
             if (project != null)
             {
                 var projectName = project.Name;
                 var projectPath = project.Path;
-                var directory = Path.GetDirectoryName(projectPath);
-
-                if (directory == null)
-                {
-                    return;
-                }
 
                 var result = await this.Extensibility.Shell().ShowPromptAsync($"Are you sure you want to delete the bin/obj folders for {projectName} ?", PromptOptions.OKCancel, cancellationToken);
 
                 if (result)
                 {
-                    var binFolder = Path.Combine(directory, "bin");
-
-                    if (Directory.Exists(binFolder))
-                    {
-                        Directory.Delete(binFolder, true);
-                    }
-
-                    var objFolder = Path.Combine(directory, "obj");
-
-                    if (Directory.Exists(objFolder))
-                    {
-                        Directory.Delete(objFolder, true);
-                    }
+                    await _nukeService.NukeAsync(projectPath);
 
                     await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
                 }

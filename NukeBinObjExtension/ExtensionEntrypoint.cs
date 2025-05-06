@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.VisualStudio.Extensibility;
 
 namespace NukeBinObjExtension
@@ -24,6 +25,8 @@ namespace NukeBinObjExtension
         protected override void InitializeServices(IServiceCollection serviceCollection)
         {
             base.InitializeServices(serviceCollection);
+
+            serviceCollection.TryAddTransient<NukeService>();
 
             // You can configure dependency injection here by adding services to the serviceCollection.
         }
