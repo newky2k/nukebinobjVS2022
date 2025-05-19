@@ -40,7 +40,7 @@ namespace NukeBinObjExtension
                 // Project context menu
                 CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 518, priority: 0),
             ],
-            
+            EnabledWhen = ActivationConstraint.And(!ActivationConstraint.SolutionState(SolutionState.Building),ActivationConstraint.SolutionState(SolutionState.FullyLoaded)),
         };
 
         /// <inheritdoc />
