@@ -11,16 +11,16 @@ namespace NukeBinObjExtension
     /// Command1 handler.
     /// </summary>
     [VisualStudioContribution]
-    internal class NukeCommand : Command
+    internal class SolutionNukeCommand : Command
     {
         private readonly TraceSource logger;
         private readonly NukeService _nukeService;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NukeCommand"/> class.
+        /// Initializes a new instance of the <see cref="SolutionNukeCommand"/> class.
         /// </summary>
         /// <param name="traceSource">Trace source instance to utilize.</param>
-        public NukeCommand(TraceSource traceSource, NukeService nukeService)
+        public SolutionNukeCommand(TraceSource traceSource, NukeService nukeService)
         {
             // This optional TraceSource can be used for logging in the command. You can use dependency injection to access
             // other services here as well.
@@ -30,15 +30,14 @@ namespace NukeBinObjExtension
         }
 
         /// <inheritdoc />
-        public override CommandConfiguration CommandConfiguration => new("%NukeBinObjExtension.NukeCommand.DisplayName%")
+        public override CommandConfiguration CommandConfiguration => new("%NukeBinObjExtension.SolutionNukeCommand.DisplayName%")
         {
             // Use this object initializer to set optional parameters for the command. The required parameter,
             // displayName, is set above. DisplayName is localized and references an entry in .vsextension\string-resources.json.
             Icon = new(ImageMoniker.KnownValues.CleanData, IconSettings.IconAndText),
             Placements =
             [
-                // Project context menu
-                CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 518, priority: 0),
+                 CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 537, priority: 0), 
             ],
             EnabledWhen = ActivationConstraint.And(!ActivationConstraint.SolutionState(SolutionState.Building),ActivationConstraint.SolutionState(SolutionState.FullyLoaded)),
         };
@@ -53,30 +52,43 @@ namespace NukeBinObjExtension
         /// <inheritdoc />
         public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken)
         {
-            var project = await context.GetActiveProjectAsync(project => project.With(p => new { p.Name, p.Path })
-                            .With(p => p.ActiveConfigurations),
-                            cancellationToken);
 
-            if (project != null)
+            var solutionQueryResults = await context.Extensibility.Workspaces().QuerySolutionAsync(
+                                                                                solution => solution.With(solution => solution.BaseName),
+                                                                                cancellationToken);
+
+            var projects = await context.Extensibility.Workspaces().QueryProjectsAsync(
+                                                                project => project.With(p => new { p.Name, p.Path }),
+                                                                cancellationToken);
+
+            if (solutionQueryResults.Any())
             {
-                var projectName = project.Name;
-                var projectPath = project.Path;
+                var sol = solutionQueryResults.First();
 
-                if (!string.IsNullOrEmpty(projectPath))
+                if (projects.Any())
                 {
-                    var result = await this.Extensibility.Shell().ShowPromptAsync($"Are you sure you want to delete the bin/obj folders for {projectName} ?", PromptOptions.OKCancel, cancellationToken);
+
+                    var result = await this.Extensibility.Shell().ShowPromptAsync($"Are you sure you want to delete the bin/obj folders for all projects in {sol.FileName}?", PromptOptions.OKCancel, cancellationToken);
 
                     if (result)
                     {
-                        await _nukeService.NukeAsync(projectPath);
+                        foreach (var project in projects)
+                        {
+                            var projectPath = project.Path;
+
+                            if (!string.IsNullOrEmpty(projectPath))
+                            {
+                                await _nukeService.NukeAsync(projectPath);
+                            }
+                            
+                        }
+                        // 
 
                         await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
                     }
-                }
 
+                }
             }
-           
-           
         }
     }
 }
