@@ -10,15 +10,27 @@ namespace NukeBinObjExtension
     [VisualStudioContribution]
     internal class ExtensionEntrypoint : Extension
     {
-        /// <inheritdoc/>
-        public override ExtensionConfiguration ExtensionConfiguration => new()
+        ExtensionMetadata extensionMetadata
         {
-            Metadata = new(
+            get
+            {
+                ExtensionMetadata metadata = new(
                     id: "NukeBinObjExtension.86019190-4440-4de9-bf7e-590dd3d2c64b",
                     version: this.ExtensionAssemblyVersion,
                     publisherName: "Newky2k",
                     displayName: "Nuke Bin/Obj",
-                    description: "Simple extension to fully delete the bin/obj folder of the selected project"),
+                    description: "Simple extension to fully delete the bin/obj folder of the selected project")
+                {
+                    Preview = false
+                };
+
+                return metadata;
+            }
+        }
+        /// <inheritdoc/>
+        public override ExtensionConfiguration ExtensionConfiguration => new()
+        {
+            Metadata = extensionMetadata,
         };
 
         /// <inheritdoc />

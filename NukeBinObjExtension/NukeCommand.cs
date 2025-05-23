@@ -72,6 +72,7 @@ namespace NukeBinObjExtension
 
                         await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
                     }
+
                 }
 
             }

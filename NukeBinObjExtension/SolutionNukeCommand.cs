@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using Microsoft;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using Microsoft.VisualStudio.ProjectSystem.Query;
+using Microsoft.VisualStudio.RpcContracts.ProgressReporting;
 
 namespace NukeBinObjExtension
 {
@@ -60,6 +62,7 @@ namespace NukeBinObjExtension
             var projects = await context.Extensibility.Workspaces().QueryProjectsAsync(
                                                                 project => project.With(p => new { p.Name, p.Path }),
                                                                 cancellationToken);
+           
 
             if (solutionQueryResults.Any())
             {
@@ -67,22 +70,14 @@ namespace NukeBinObjExtension
 
                 if (projects.Any())
                 {
+                    var baseName = sol.BaseName;
 
-                    var result = await this.Extensibility.Shell().ShowPromptAsync($"Are you sure you want to delete the bin/obj folders for all projects in {sol.FileName}?", PromptOptions.OKCancel, cancellationToken);
+                    var result = await this.Extensibility.Shell().ShowPromptAsync($"Are you sure you want to delete the bin/obj folders for all projects in {sol.BaseName}?", PromptOptions.OKCancel, cancellationToken);
 
                     if (result)
                     {
-                        foreach (var project in projects)
-                        {
-                            var projectPath = project.Path;
+                        await this.ProcessProjectsAsync(projects.ToList(), cancellationToken);
 
-                            if (!string.IsNullOrEmpty(projectPath))
-                            {
-                                await _nukeService.NukeAsync(projectPath);
-                            }
-                            
-                        }
-                        // 
 
                         await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
                     }
@@ -90,5 +85,46 @@ namespace NukeBinObjExtension
                 }
             }
         }
+
+        private async Task<ProgressReporter> ProcessProjectsAsync(List<IProjectSnapshot> projects, CancellationToken cancellationToken)
+        {
+            ProgressReporter progress = await this.Extensibility.Shell().StartProgressReportingAsync("Nuking Bin/Obj Folders for the solution", cancellationToken);
+
+            var projectCount = projects.Count();
+
+            try
+            {
+                for (int i = 0; i < projectCount; i++)
+                {
+                    progress.Report(CreateProgressStatus(i, projectCount));
+                    progress.CancellationToken.ThrowIfCancellationRequested();
+
+                    var project = projects[i];
+                    var projectPath = project.Path;
+
+                    if (!string.IsNullOrEmpty(projectPath))
+                    {
+                        Debug.WriteLine($"Project: {project.Name}");
+                        
+                        await _nukeService.NukeAsync(projectPath);
+                    }
+                }
+            }
+            catch (OperationCanceledException ex)
+            {
+                //nothing to do
+               
+            }
+
+            return progress;
+        }
+
+        private static ProgressStatus CreateProgressStatus(int current, int max)
+        {
+
+            return new ProgressStatus((int)((current / (double)max) * 100));
+
+        }
     }
+
 }
