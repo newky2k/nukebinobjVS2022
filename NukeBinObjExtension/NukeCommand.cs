@@ -60,19 +60,22 @@ namespace NukeBinObjExtension
             if (project != null)
             {
                 var projectName = project.Name;
-                var projectPath = project.Path;
+               
 
                 var result = await this.Extensibility.Shell().ShowPromptAsync($"Are you sure you want to delete the bin/obj folders for {projectName} ?", PromptOptions.OKCancel, cancellationToken);
 
                 if (result)
                 {
-                    await _nukeService.NukeAsync(projectPath);
+                    if (project.Path is string projectPath)
+                    {
+                        await _nukeService.NukeAsync(projectPath);
 
-                    await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
+                        await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
+                    }
+                    
                 }
             }
-           
-           
+          
         }
     }
 }
