@@ -1,4 +1,4 @@
 {
   "NukeBinObjExtension.NukeCommand.DisplayName": "Nuke Bin and Obj folders",
-  "NukeBinObjExtension.SolutionNukeCommand.DisplayName": "Nuke Solution Projects Bin/Obj folders"
+  "NukeBinObjExtension.SolutionNukeCommand.DisplayName": "Nuke Bin and Obj folders for all Projects"
 }

@@ -39,7 +39,7 @@ namespace NukeBinObjExtension
             Icon = new(ImageMoniker.KnownValues.CleanData, IconSettings.IconAndText),
             Placements =
             [
-                 CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 537, priority: 0), 
+                 CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 537, priority: 0x03FF), 
             ],
             EnabledWhen = ActivationConstraint.And(!ActivationConstraint.SolutionState(SolutionState.Building),ActivationConstraint.SolutionState(SolutionState.FullyLoaded)),
         };
