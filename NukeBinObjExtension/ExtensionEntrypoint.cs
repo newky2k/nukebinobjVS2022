@@ -18,7 +18,10 @@ namespace NukeBinObjExtension
                     version: this.ExtensionAssemblyVersion,
                     publisherName: "Newky2k",
                     displayName: "Nuke Bin/Obj",
-                    description: "Simple extension to fully delete the bin/obj folder of the selected project"),
+                    description: "Simple extension to fully delete the bin/obj folder of the selected project")
+            {
+                Preview = false,
+            },
         };
 
         /// <inheritdoc />

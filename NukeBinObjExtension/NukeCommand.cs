@@ -38,7 +38,7 @@ namespace NukeBinObjExtension
             Placements =
             [
                 // Project context menu
-                CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 518, priority: 0),
+                CommandPlacement.VsctParent(new Guid("{d309f791-903f-11d0-9efc-00a0c911004f}"), id: 518, priority: 0x0401),
             ],
             EnabledWhen = ActivationConstraint.And(!ActivationConstraint.SolutionState(SolutionState.Building),ActivationConstraint.SolutionState(SolutionState.FullyLoaded)),
         };
@@ -60,19 +60,22 @@ namespace NukeBinObjExtension
             if (project != null)
             {
                 var projectName = project.Name;
-                var projectPath = project.Path;
+               
 
                 var result = await this.Extensibility.Shell().ShowPromptAsync($"Are you sure you want to delete the bin/obj folders for {projectName} ?", PromptOptions.OKCancel, cancellationToken);
 
                 if (result)
                 {
-                    await _nukeService.NukeAsync(projectPath);
+                    if (project.Path is string projectPath)
+                    {
+                        await _nukeService.NukeAsync(projectPath);
 
-                    await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
+                        await this.Extensibility.Shell().ShowPromptAsync("The bin/obj folders have been Nuked!", PromptOptions.OK, cancellationToken);
+                    }
+                    
                 }
             }
-           
-           
+          
         }
     }
 }
